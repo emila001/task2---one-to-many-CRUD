@@ -1,0 +1,45 @@
+const Book = require ('../models/book')
+const Review = require ('../models/review')
+
+module.exports = {
+    index: async (req, res, next) => {
+        const books = await Book.find({})
+        res.status(200).json(books)
+    },
+    newBook: async (req, res, next) => {
+        const newBook = new Book (req.body)
+        const bookWithId = { ... book, id: uuidv4()}
+        newBook.push(bookWithId)
+        res.send('books ${book.titleT} is added')
+        const book = await newBook.save()
+        res.status(201).json(book)
+    },
+    getBook: async (req, res, next) => {
+        const {bookId} = req.params
+        const book = await Book.findById(bookId)
+        res.status(200).json(book)
+    },
+    updateBook: async (req, res, next) => {
+        const {bookId} = req.params
+        const newBook = req.body
+        const result = await Book.findByIdAndUpdate(bookId, newBook)
+        res.status(200).json({success: true})
+    },
+    getBookReviews: async(req, res, next) => {
+        const {bookId} = req.params
+        const book = await Book.findById(bookId).populate('reviews')
+        console.log('book\'s review', book.reviews)
+        res.status(200).json(book.reviews)
+    }, 
+    newBookReview: async (req, res, next) => {
+        const {bookId} = req.params
+        const newReview = new Review(req.body)
+        console.log('newReview', newReview)
+        const book = await Book.findById(bookId)
+        newReview.book = book
+        await newReview.save()
+        book.reviews.push(newReview)
+        await book.save()
+        res.status(201).json(newReview)
+    }
+}
